@@ -1,4 +1,6 @@
 const userNameRegExp = new RegExp(`^[A-Za-z0-9]+$`); //only letters and numbers
+const emailRegExp = new RegExp(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`); //valid email address
+                               
 
 const registerForm = document.getElementById(`registration`);
 const elError = document.getElementById(`errorDisplay`);
@@ -13,26 +15,34 @@ function removeErrorClass(ev){
 }
 
 function validateUserName() {
-    let errorMessage = ``;
+    let errors = [];
     if (!userNameRegExp.test(regUserName.value)){
-        errorMessage += `The username cannot contain any special characters or whitespaces.\n`;
-        regUserName.classList.add('error');
-        regUserName.focus();
+        errors.push ({element: regUserName , errorMessage: `The username cannot contain any special characters or whitespaces.`});
+    }
+    let containsUniqes = false;
+    for (let i=1; i<regUserName.value.length;i++){
+        if (regUserName.value[0]!= regUserName.value[i]){
+            containsUniqes = true;
+            break;
+        }
     }        
-    return errorMessage;
+    if (!containsUniqes){
+        errors.push ({element: regUserName, errorMessage: `The username must contain at least two unique characters.`});
+    }    
+    return errors;
 }
 
 //The email must be a valid email address.
 //The email must not be from the domain "example.com."
 function validateEmail() {
-    let errorMessage = ``;
-    if (regEmail.value        
-        .includes(`example.com`)) {
-        errorMessage += `The email must not be from the domain "example.com."\n`;
-        regEmail.classList.add('error');
-        regEmail.focus();
-    }        
-    return errorMessage;
+    let errors = [];
+    if (regEmail.value.includes(`example.com`)) {
+        errors.push ({element: regEmail , errorMessage: `The email must not be from the domain "example.com."`});        
+    }
+    if (!emailRegExp.test(regEmail.value)){
+        errors.push ({element: regEmail , errorMessage: `The email must be a valid email address.`});                
+    }
+    return errors;
 }
 
 function validateRegistationSubmittion(ev) {
@@ -41,21 +51,18 @@ function validateRegistationSubmittion(ev) {
     })
     elErrorList.innerHTML = ``; //clearing the error list
 
-    let errorMessage = ``;
-    errorMessage += validateUserName();
-    errorMessage += validateEmail();
-    if (errorMessage) {
+    let errors = [];
+    errors = errors.concat(validateUserName());
+    errors = errors.concat(validateEmail());
+    if (errors.length) {
         elErrorList.innerHTML = `<h4>There are errors in the registration form:<\h4>`; //hardcoding is BAD :-)
-        ev.preventDefault();
-        
-        
-        const errorArray = errorMessage.split(`\n`);
-        console.log(errorArray);
-        errorArray.forEach( it => {
-            if (!it) return;
+        ev.preventDefault();       
+        errors.forEach( it => {
             const elErrorLi = document.createElement(`li`);
-            elErrorLi.textContent = it;
+            elErrorLi.textContent = it.errorMessage;
             elErrorList.appendChild(elErrorLi);
+            it.element.classList.add('error');
+            it.element.focus(); //focus on the last error
         })
         elError.style.display = `block`;
         
