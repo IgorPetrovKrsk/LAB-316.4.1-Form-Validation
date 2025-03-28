@@ -4,6 +4,11 @@ const lowerCaseRegExp = new RegExp('[a-z]');
 const upperCaseRegExp = new RegExp('[A-Z]');
 const numberRegExp = new RegExp('[0-9]');
 const specialCharacterRegExp = new RegExp('[^a-zA-Z0-9]');
+let localUsers = JSON.parse(localStorage.getItem(`users`)); // users is an array of objects
+if (localUsers==null){
+    localUsers = [];
+}
+//console.log(localUsers);
 
 const registerForm = document.getElementById(`registration`);
 const elError = document.getElementById(`errorDisplay`);
@@ -22,6 +27,13 @@ function removeErrorClass(ev) {
 
 function validateUserName() {
     let errors = [];
+    //check if user name is unique
+    if (localUsers.find(it => it.userName == regUserName.value.toLowerCase())) {  // NOT {} in arrow function to implement return!!!!
+        errors.push({ element: regUserName, errorMessage: `This user name is already been taken. Please select another one.`});
+    }else {
+        console.log(`username free`);
+        
+    }
     if (!userNameRegExp.test(regUserName.value)) {
         errors.push({ element: regUserName, errorMessage: `The username cannot contain any special characters or whitespaces.` });
     }
@@ -118,8 +130,16 @@ function validateRegistationSubmittion(ev) {
         })
         elError.style.display = `block`;
 
-    } else {
+    } else { //everthing is fine save the user data
         elError.style.display = `none`;
+        localUsers.push({
+            userName: regUserName.value.toLowerCase(),
+            email:regEmail.value.toLowerCase(),
+            password:regPassword1.value
+        });
+        localStorage.setItem('users',JSON.stringify(localUsers));
+        //all forms are cleared automatically after sucsessful submit
+        alert(`Registration for ${regUserName.value} successful. Welcome!!!`)
     }
 }
 
