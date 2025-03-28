@@ -115,6 +115,13 @@ a:hover {
   transform: translate(-50%, 0%);
   box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.25);
   user-select: none;
-  padding: 20px;
+  padding: 10px;
   display: none;
+}
+
+.error {
+  background-color: #fcc;
+}
+#errorList{
+  /* padding: 10px;  */
 }
