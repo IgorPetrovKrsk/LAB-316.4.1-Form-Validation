@@ -1,34 +1,40 @@
 const userNameRegExp = new RegExp(`^[A-Za-z0-9]+$`); //only letters and numbers
 const emailRegExp = new RegExp(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`); //valid email address
-                               
+const lowerCaseRegExp = new RegExp('[a-z]');
+const upperCaseRegExp = new RegExp('[A-Z]');
+const numberRegExp = new RegExp('[0-9]');
+const specialCharacterRegExp = new RegExp('[^a-zA-Z0-9]');
 
 const registerForm = document.getElementById(`registration`);
 const elError = document.getElementById(`errorDisplay`);
 const elErrorList = document.getElementById('errorList');
 const regUserName = registerForm.querySelector("input[name='username']");
 const regEmail = registerForm.querySelector("input[name='email']");
+const regPassword1 = registerForm.querySelector("input[name='password']");
+const regPassword2 = registerForm.querySelector("input[name='passwordCheck']");
+const regTerms = registerForm.querySelector("input[name='terms']")
 const regSubmit = registerForm.querySelector("input[type='submit']");
 
 //Part 3: Registration Form Validation Requirements
-function removeErrorClass(ev){
+function removeErrorClass(ev) {
     ev.target.classList.remove(`error`);
 }
 
 function validateUserName() {
     let errors = [];
-    if (!userNameRegExp.test(regUserName.value)){
-        errors.push ({element: regUserName , errorMessage: `The username cannot contain any special characters or whitespaces.`});
+    if (!userNameRegExp.test(regUserName.value)) {
+        errors.push({ element: regUserName, errorMessage: `The username cannot contain any special characters or whitespaces.` });
     }
     let containsUniqes = false;
-    for (let i=1; i<regUserName.value.length;i++){
-        if (regUserName.value[0]!= regUserName.value[i]){
+    for (let i = 1; i < regUserName.value.length; i++) {
+        if (regUserName.value[0] != regUserName.value[i]) {
             containsUniqes = true;
             break;
         }
-    }        
-    if (!containsUniqes){
-        errors.push ({element: regUserName, errorMessage: `The username must contain at least two unique characters.`});
-    }    
+    }
+    if (!containsUniqes) {
+        errors.push({ element: regUserName, errorMessage: `The username must contain at least two unique characters.` });
+    }
     return errors;
 }
 
@@ -36,28 +42,74 @@ function validateUserName() {
 //The email must not be from the domain "example.com."
 function validateEmail() {
     let errors = [];
-    if (regEmail.value.includes(`example.com`)) {
-        errors.push ({element: regEmail , errorMessage: `The email must not be from the domain "example.com."`});        
+    if (regEmail.value.toLowerCase().includes(`example.com`)) {
+        errors.push({ element: regEmail, errorMessage: `The email must not be from the domain "example.com."` });
     }
-    if (!emailRegExp.test(regEmail.value)){
-        errors.push ({element: regEmail , errorMessage: `The email must be a valid email address.`});                
+    if (!emailRegExp.test(regEmail.value)) {
+        errors.push({ element: regEmail, errorMessage: `The email must be a valid email address.` });
+    }
+    return errors;
+}
+// Passwords must be at least 12 characters long.
+// Passwords must have at least one uppercase and one lowercase letter.
+// Passwords must contain at least one number.
+// Passwords must contain at least one special character.
+// Passwords cannot contain the word "password" (uppercase, lowercase, or mixed).
+// Passwords cannot contain the username.
+// Both passwords must match.
+function validatePasswords() {
+    let errors = [];
+    //will only validate password1 and then just check if passwords are the same
+    if (regPassword1.value.length < 12) {
+        errors.push({ element: regPassword1, errorMessage: `Password must be at least 12 characters long` });
+    }
+    if (!lowerCaseRegExp.test(regPassword1.value)) {
+        errors.push({ element: regPassword1, errorMessage: `Password must have at least one lowercase letter` });
+    }
+    if (!upperCaseRegExp.test(regPassword1.value)) {
+        errors.push({ element: regPassword1, errorMessage: `Password must have at least one upper letter` });
+    }
+    if (!numberRegExp.test(regPassword1.value)) {
+        errors.push({ element: regPassword1, errorMessage: `Password must contain at least one number` });
+    }
+    if (!specialCharacterRegExp.test(regPassword1.value)) {
+        errors.push({ element: regPassword1, errorMessage: `Password must contain at least one special character` });
+    }
+    if (regPassword1.value.toLowerCase().includes('password')) {
+        errors.push({ element: regPassword1, errorMessage: `Password cannot contain the word "password"` });
+    }
+    if (regPassword1.value.toLowerCase().includes(regUserName.value.toLowerCase())) {
+        errors.push({ element: regPassword1, errorMessage: `Password cannot contain the username` });
+    }
+    if (regPassword1.value != regPassword2.value) {
+        errors.push({ element: regPassword2, errorMessage: `Both passwords must match` });
+    }
+    return errors;
+}
+
+function validateTerms(){
+    let errors = [];
+    if (!regTerms.checked) {
+        errors.push({ element: regTerms, errorMessage: `The terms and conditions must be accepted.` });
     }
     return errors;
 }
 
 function validateRegistationSubmittion(ev) {
-    registerForm.querySelectorAll('input').forEach( it => { //grabbing all the input elements from form and removing error class
+    registerForm.querySelectorAll('input').forEach(it => { //grabbing all the input elements from form and removing error class
         it.classList.remove('error');
     })
     elErrorList.innerHTML = ``; //clearing the error list
-
     let errors = [];
     errors = errors.concat(validateUserName());
     errors = errors.concat(validateEmail());
+    errors = errors.concat(validatePasswords());
+    errors = errors.concat(validateTerms());
+
     if (errors.length) {
         elErrorList.innerHTML = `<h4>There are errors in the registration form:<\h4>`; //hardcoding is BAD :-)
-        ev.preventDefault();       
-        errors.forEach( it => {
+        ev.preventDefault();
+        errors.forEach(it => {
             const elErrorLi = document.createElement(`li`);
             elErrorLi.textContent = it.errorMessage;
             elErrorList.appendChild(elErrorLi);
@@ -65,7 +117,7 @@ function validateRegistationSubmittion(ev) {
             it.element.focus(); //focus on the last error
         })
         elError.style.display = `block`;
-        
+
     } else {
         elError.style.display = `none`;
     }
@@ -74,6 +126,6 @@ function validateRegistationSubmittion(ev) {
 registerForm.addEventListener('submit', validateRegistationSubmittion);
 
 
-regUserName.addEventListener('input',removeErrorClass); //removing error class when starting typoing
-regEmail.addEventListener('input',removeErrorClass); 
+regUserName.addEventListener('input', removeErrorClass); //removing error class when starting typoing
+regEmail.addEventListener('input', removeErrorClass);
 
