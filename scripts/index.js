@@ -5,11 +5,12 @@ const upperCaseRegExp = new RegExp('[A-Z]');
 const numberRegExp = new RegExp('[0-9]');
 const specialCharacterRegExp = new RegExp('[^a-zA-Z0-9]');
 let localUsers = JSON.parse(localStorage.getItem(`users`)); // users is an array of objects
-if (localUsers==null){
+if (localUsers == null) {
     localUsers = [];
 }
 //console.log(localUsers);
 
+//registation form
 const registerForm = document.getElementById(`registration`);
 const elError = document.getElementById(`errorDisplay`);
 const elErrorList = document.getElementById('errorList');
@@ -19,6 +20,12 @@ const regPassword1 = registerForm.querySelector("input[name='password']");
 const regPassword2 = registerForm.querySelector("input[name='passwordCheck']");
 const regTerms = registerForm.querySelector("input[name='terms']")
 const regSubmit = registerForm.querySelector("input[type='submit']");
+//login form
+const loginForm = document.getElementById(`login`);
+const logUserName = loginForm.querySelector("input[name='username']");
+const logPassword = loginForm.querySelector("input[name='password']");
+const logPersist = loginForm.querySelector("input[name='persist']");
+
 
 //Part 3: Registration Form Validation Requirements
 function removeErrorClass(ev) {
@@ -29,10 +36,10 @@ function validateUserName() {
     let errors = [];
     //check if user name is unique
     if (localUsers.find(it => it.userName == regUserName.value.toLowerCase())) {  // NOT {} in arrow function to implement return!!!!
-        errors.push({ element: regUserName, errorMessage: `This user name is already been taken. Please select another one.`});
-    }else {
+        errors.push({ element: regUserName, errorMessage: `This user name is already been taken. Please select another one.` });
+    } else {
         console.log(`username free`);
-        
+
     }
     if (!userNameRegExp.test(regUserName.value)) {
         errors.push({ element: regUserName, errorMessage: `The username cannot contain any special characters or whitespaces.` });
@@ -99,10 +106,25 @@ function validatePasswords() {
     return errors;
 }
 
-function validateTerms(){
+function validateTerms() {
     let errors = [];
     if (!regTerms.checked) {
         errors.push({ element: regTerms, errorMessage: `The terms and conditions must be accepted.` });
+    }
+    return errors;
+}
+
+function validateLoginUserName() {
+    let errors = [];
+    if (!localUsers.find(it => it.userName == logUserName.value.toLowerCase())) {  // NOT {} in arrow function to implement return!!!!
+        errors.push({ element: logUserName, errorMessage: `User ${logUserName.value} not found.` });
+    }
+    return errors;
+}
+function validateLoginPassword() {
+    let errors = [];
+    if (!localUsers.find(it => it.password == logPassword.value)) {  // NOT {} in arrow function to implement return!!!!
+        errors.push({ element: logPassword, errorMessage: `Password is incorrect. Please try again.` });
     }
     return errors;
 }
@@ -134,18 +156,53 @@ function validateRegistationSubmittion(ev) {
         elError.style.display = `none`;
         localUsers.push({
             userName: regUserName.value.toLowerCase(),
-            email:regEmail.value.toLowerCase(),
-            password:regPassword1.value
+            email: regEmail.value.toLowerCase(),
+            password: regPassword1.value
         });
-        localStorage.setItem('users',JSON.stringify(localUsers));
+        localStorage.setItem('users', JSON.stringify(localUsers));
         //all forms are cleared automatically after sucsessful submit
         alert(`Registration for ${regUserName.value} successful. Welcome!!!`)
     }
 }
 
-registerForm.addEventListener('submit', validateRegistationSubmittion);
+function validateLoginSubmittion(ev) {
+    loginForm.querySelectorAll('input').forEach(it => { //grabbing all the input elements from form and removing error class
+        it.classList.remove('error');
+    })
+    elErrorList.innerHTML = ``; //clearing the error list
+    let errors = [];
+    errors = errors.concat(validateLoginUserName());
+    errors = errors.concat(validateLoginPassword());
+    if (errors.length) {
+        elErrorList.innerHTML = `<h4>There are errors in the login form:<\h4>`; //hardcoding is BAD :-)
+        ev.preventDefault();
+        errors.forEach(it => {
+            const elErrorLi = document.createElement(`li`);
+            elErrorLi.textContent = it.errorMessage;
+            elErrorList.appendChild(elErrorLi);
+            it.element.classList.add('error');
+            it.element.focus(); //focus on the last error
+        })
+        elError.style.display = `block`;
 
+    } else { //everthing is fine save the user data
+        elError.style.display = `none`;
+        if (!logPersist.checked) {
+            alert(`Login for ${regUserName.value} successful. Welcome!!!`)
+        } else {
+            alert(`Login for ${regUserName.value} successful. Welcome!!! You will be keeped logged in.`)
+        }
+    }
+
+}
+
+registerForm.addEventListener('submit', validateRegistationSubmittion);
+loginForm.addEventListener('submit', validateLoginSubmittion);
 
 regUserName.addEventListener('input', removeErrorClass); //removing error class when starting typoing
 regEmail.addEventListener('input', removeErrorClass);
+regPassword1.addEventListener('input', removeErrorClass); 
+regPassword2.addEventListener('input', removeErrorClass);
+logUserName.addEventListener('input', removeErrorClass); 
+logPassword.addEventListener('input', removeErrorClass);
 
